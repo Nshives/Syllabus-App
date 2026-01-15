@@ -1,0 +1,36 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL") // Uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // Uses direct connection
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  courses   Course[]
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  title       String
+  code        String?
+  color       String       @default("#3b82f6") // <--- ADD THIS LINE!
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  assignments Assignment[]
+}
+
+model Assignment {
+  id        Int      @id @default(autoincrement())
+  title     String
+  dueDate   String?  // Format: YYYY-MM-DD
+  status    String   @default("pending")
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id])
+}

@@ -24,9 +24,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="font-sans antialiased text-gray-900 bg-gray-50">
+        
+        {/* Navigation Bar */}
+        <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+          <div className="font-bold text-xl text-blue-600 flex items-center gap-2">
+            🎓 Syllabus App
+          </div>
+          <div className="space-x-6 text-sm font-medium">
+            <a href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
+            <a href="/calendar" className="text-gray-600 hover:text-blue-600 transition-colors">Calendar</a>
+            <a href="/login" className="text-red-500 hover:text-red-700">Logout</a>
+          </div>
+        </nav>
+
         {children}
       </body>
     </html>
