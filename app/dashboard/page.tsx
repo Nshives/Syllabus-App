@@ -118,6 +118,12 @@ export default function Dashboard() {
               disabled={uploading}
               className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
             />
+            {/* ADD THIS SECTION BELOW */}
+            <p className="text-xs text-gray-500 mt-2">
+              ⚠️ Files must be under 4.5 MB.
+              <br />
+              (If your file is larger, please compress it first)
+            </p>
             {uploading && <span className="text-blue-600 font-medium animate-pulse">Processing...</span>}
           </div>
           {message && <p className="mt-3 text-sm font-medium text-gray-700">{message}</p>}
