@@ -29,4 +29,6 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
   }
+
+  //Trigger redeploy
 }
