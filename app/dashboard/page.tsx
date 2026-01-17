@@ -101,7 +101,7 @@ export default function Dashboard() {
       setExpandedCourses([...expandedCourses, courseId]); // Add ID (Open)
     }
   };
-
+  //show github
   return (
     <div className="min-h-screen bg-gray-50 p-10">
       <div className="max-w-5xl mx-auto">
