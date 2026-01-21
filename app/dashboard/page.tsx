@@ -38,7 +38,7 @@ export default function Dashboard() {
   
   // State for menus and expansion
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
-  const [expandedCourses, setExpandedCourses] = useState<number[]>([]); // Array of IDs that are fully open
+  const [expandedCourses, setExpandedCourses] = useState<number[]>([]); 
 
   useEffect(() => {
     fetchCourses();
@@ -96,16 +96,30 @@ export default function Dashboard() {
 
   const toggleExpand = (courseId: number) => {
     if (expandedCourses.includes(courseId)) {
-      setExpandedCourses(expandedCourses.filter(id => id !== courseId)); // Remove ID (Close)
+      setExpandedCourses(expandedCourses.filter(id => id !== courseId)); 
     } else {
-      setExpandedCourses([...expandedCourses, courseId]); // Add ID (Open)
+      setExpandedCourses([...expandedCourses, courseId]); 
     }
   };
-  //show github
+
   return (
     <div className="min-h-screen bg-gray-50 p-10">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-800">My Dashboard</h1>
+        
+        {/* HEADER SECTION (Updated) */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">My Dashboard</h1>
+          
+          {/* Buy Me A Coffee Button */}
+          <a
+            href="https://buymeacoffee.com/nshively"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-300 transition-transform hover:scale-105 shadow-sm text-sm"
+          >
+            <span>☕</span> Support
+          </a>
+        </div>
         
         {/* Upload Box */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100 mb-10">
@@ -118,7 +132,7 @@ export default function Dashboard() {
               disabled={uploading}
               className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
             />
-            {/* ADD THIS SECTION BELOW */}
+            {/* Warning Text */}
             <p className="text-xs text-gray-500 mt-2">
               ⚠️ Files must be under 4.5 MB.
               <br />
@@ -214,7 +228,7 @@ export default function Dashboard() {
                       ))}
                     </ul>
 
-                    {/* Expand/Collapse Button (Only shows if list is long) */}
+                    {/* Expand/Collapse Button */}
                     {hasMore && (
                       <button 
                         onClick={() => toggleExpand(course.id)}
