@@ -20,7 +20,10 @@ interface Assignment {
 export default function CalendarPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // FIX: Separate 'view' date from 'real current' date to prevent hydration bugs
+  const [currentDate, setCurrentDate] = useState(new Date()); // The month we are LOOKING at
+  const [now, setNow] = useState(new Date()); // The ACTUAL today (updates on client)
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // Form State
@@ -30,6 +33,11 @@ export default function CalendarPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    // FIX: Force update "now" and "currentDate" to the user's browser time on load
+    const today = new Date();
+    setNow(today);
+    setCurrentDate(today);
+    
     fetchData();
   }, []);
 
@@ -129,6 +137,13 @@ export default function CalendarPage() {
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
+  // FIX: Reset to the REAL "now", not the build-time "now"
+  const goToToday = () => {
+    const today = new Date();
+    setNow(today);
+    setCurrentDate(today);
+  };
+
   const getAssignmentsForDay = (date: Date) => {
     return assignments.filter(a => {
       if (!a.dueDate) return false;
@@ -162,7 +177,7 @@ export default function CalendarPage() {
               ← Prev
             </button>
             <button 
-              onClick={() => setCurrentDate(new Date())} 
+              onClick={goToToday} 
               className="px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 shadow-sm rounded-lg hover:bg-blue-100 font-medium transition-all"
             >
               Today
@@ -195,7 +210,9 @@ export default function CalendarPage() {
             const day = i + 1;
             const thisDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             const dayAssignments = getAssignmentsForDay(thisDate);
-            const isToday = new Date().toDateString() === thisDate.toDateString();
+            
+            // FIX: Compare against the 'now' state variable, NOT new Date()
+            const isToday = now.toDateString() === thisDate.toDateString();
 
             return (
               <div 
