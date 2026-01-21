@@ -18,12 +18,15 @@ interface Assignment {
 }
 
 export default function CalendarPage() {
+  // 1. FIX: Add a 'mounted' state to prevent Server Side Rendering (SSR) of the date
+  const [isMounted, setIsMounted] = useState(false);
+  
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   
-  // FIX: Separate 'view' date from 'real current' date to prevent hydration bugs
-  const [currentDate, setCurrentDate] = useState(new Date()); // The month we are LOOKING at
-  const [now, setNow] = useState(new Date()); // The ACTUAL today (updates on client)
+  // Initialize with new Date() but it won't be shown until isMounted is true
+  const [currentDate, setCurrentDate] = useState(new Date()); 
+  const [now, setNow] = useState(new Date()); 
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // Form State
@@ -33,7 +36,8 @@ export default function CalendarPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // FIX: Force update "now" and "currentDate" to the user's browser time on load
+    // 2. FIX: This runs ONLY in the browser. We capture the real local time here.
+    setIsMounted(true);
     const today = new Date();
     setNow(today);
     setCurrentDate(today);
@@ -58,6 +62,7 @@ export default function CalendarPage() {
   };
 
   const getDateString = (date: Date) => {
+    // FIX: Use local time string construction to avoid UTC shifts
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -129,6 +134,12 @@ export default function CalendarPage() {
     }
   };
 
+  // 3. FIX: Prevent Hydration Error. If not mounted, show nothing (or a spinner).
+  // This ensures the user never sees the "Server Time" version of the calendar.
+  if (!isMounted) {
+    return null; 
+  }
+
   // Calendar Helpers
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay(); 
@@ -137,7 +148,6 @@ export default function CalendarPage() {
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
-  // FIX: Reset to the REAL "now", not the build-time "now"
   const goToToday = () => {
     const today = new Date();
     setNow(today);
@@ -147,7 +157,11 @@ export default function CalendarPage() {
   const getAssignmentsForDay = (date: Date) => {
     return assignments.filter(a => {
       if (!a.dueDate) return false;
-      const assignDate = new Date(a.dueDate + 'T12:00:00');
+      // Parse the 'YYYY-MM-DD' string manually to avoid timezone shift
+      const [y, m, d] = a.dueDate.split('-').map(Number);
+      // Create a local date object from the parts (Month is 0-indexed in JS dates)
+      const assignDate = new Date(y, m - 1, d);
+      
       return (
         assignDate.getFullYear() === date.getFullYear() &&
         assignDate.getMonth() === date.getMonth() &&
@@ -211,7 +225,7 @@ export default function CalendarPage() {
             const thisDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             const dayAssignments = getAssignmentsForDay(thisDate);
             
-            // FIX: Compare against the 'now' state variable, NOT new Date()
+            // Compare using local date strings to be safe
             const isToday = now.toDateString() === thisDate.toDateString();
 
             return (
@@ -354,7 +368,7 @@ export default function CalendarPage() {
               )}
             </div>
 
-            {/* 🟢 MODAL FOOTER (Restructured Form) */}
+            {/* 🟢 MODAL FOOTER */}
             <div className="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
               {!isAdding ? (
                 <button 
@@ -394,7 +408,7 @@ export default function CalendarPage() {
                     </select>
                   </div>
 
-                  {/* Row 3: Buttons (Stacked right) */}
+                  {/* Row 3: Buttons */}
                   <div className="flex justify-end gap-3 mt-1">
                     <button 
                       onClick={() => setIsAdding(false)}
