@@ -242,7 +242,7 @@ export default function Dashboard() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-300 transition-transform hover:scale-105 shadow-sm text-sm"
           >
-            <span>☕</span> Support
+            <span>☕</span> Support / Request Features
           </a>
         </div>
 
