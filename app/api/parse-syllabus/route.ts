@@ -3,20 +3,23 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const pdfParse = require('pdf-extraction');
+import pdfParse from 'pdf-extraction';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
   try {
-    // 1. Check Identity
-    const session = await getSession() as any; 
+    const session = await getSession(); 
+    
     if (!session || !session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    
+    // 👈 Look how clean this is now! No String() or Number() needed.
+    const userId = session.userId;
 
-    // 2. Parse PDF
     const data = await req.formData();
     const file: File | null = data.get('file') as unknown as File;
 
@@ -27,10 +30,6 @@ export async function POST(req: Request) {
     const pdfData = await pdfParse(buffer);
     const extractedText = pdfData.text;
 
-    console.log(`✅ Text extracted (${extractedText.length} chars). Asking Gemini...`);
-
-    // 3. AI Extraction (Using the STABLE "gemini-pro" model)
-    // We switched to 'gemini-pro' to fix the 404 errors. 
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
@@ -68,29 +67,23 @@ export async function POST(req: Request) {
     const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const parsedData = JSON.parse(jsonString);
 
-    console.log("🤖 Gemini extracted:", parsedData.courseTitle);
-
-    // 4. SMART SAVE (Prevent Duplicates)
-    // First, check if this course already exists for this user
     const existingCourse = await prisma.course.findFirst({
       where: {
-        userId: session.userId,
+        userId: userId, 
         title: parsedData.courseTitle
       }
     });
 
     let savedCourse;
+    type ParsedAssignment = { title: string; dueDate?: string };
 
     if (existingCourse) {
-      // UPDATE existing course (delete old assignments, add new ones)
-      console.log("🔄 Updating existing course...");
       await prisma.assignment.deleteMany({ where: { courseId: existingCourse.id } });
-      
       savedCourse = await prisma.course.update({
         where: { id: existingCourse.id },
         data: {
           assignments: {
-            create: (parsedData.assignments || []).map((a: any) => ({
+            create: (parsedData.assignments || []).map((a: ParsedAssignment) => ({
               title: a.title,
               dueDate: a.dueDate || undefined,
               status: 'pending'
@@ -99,15 +92,13 @@ export async function POST(req: Request) {
         }
       });
     } else {
-      // CREATE new course
-      console.log("✨ Creating new course...");
       savedCourse = await prisma.course.create({
         data: {
-          userId: session.userId,
+          userId: userId, 
           title: parsedData.courseTitle || 'Untitled Course',
           code: parsedData.courseCode || 'N/A',
           assignments: {
-            create: (parsedData.assignments || []).map((a: any) => ({
+            create: (parsedData.assignments || []).map((a: ParsedAssignment) => ({
               title: a.title,
               dueDate: a.dueDate || undefined,
               status: 'pending'
@@ -119,9 +110,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, course: savedCourse });
 
-  } catch (error: any) {
-    console.error("❌ Error:", error);
-    // Return the specific error so the frontend knows what happened
-    return NextResponse.json({ error: error.message || 'Processing failed' }, { status: 500 });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Processing failed';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

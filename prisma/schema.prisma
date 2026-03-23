@@ -34,3 +34,26 @@ model Assignment {
   courseId  Int
   course    Course   @relation(fields: [courseId], references: [id])
 }
+
+// A Major Project (e.g., "Final Senior Film")
+model Project {
+  id           Int           @id @default(autoincrement())
+  title        String
+  summary      String?       
+  deliverables String?       
+  turnInInfo   String?       
+  dueDate      DateTime?
+  userId       Int           // 👈 CHANGE THIS TO Int
+  createdAt    DateTime      @default(now())
+  steps        ProjectStep[] 
+}
+
+// The individual milestones for that project
+model ProjectStep {
+  id        Int      @id @default(autoincrement())
+  title     String
+  date      DateTime?
+  completed Boolean  @default(false)
+  projectId Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
