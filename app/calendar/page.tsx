@@ -7,6 +7,7 @@ interface Course {
   title: string;
   code: string;
   color: string;
+  assignments: Assignment[];
 }
 
 interface Assignment {
@@ -49,11 +50,18 @@ export default function CalendarPage() {
     try {
       const res = await fetch('/api/courses', { cache: 'no-store' });
       if (res.ok) {
-        const courses = await res.json();
+        const courses: Course[] = await res.json(); // 👈 Explicitly typed as Course array
         setAllCourses(courses);
-        const allAssignments = courses.flatMap((c: any) => 
-          c.assignments.map((a: any) => ({ ...a, course: c }))
+        
+        // 💡 THE CLEAN FIX: No 'any' needed. 
+        // We extract the assignments and ensure the course object is attached to each.
+        const allAssignments: Assignment[] = courses.flatMap((course: Course) => 
+          course.assignments.map((assignment) => ({ 
+            ...assignment, 
+            course: course 
+          }))
         );
+        
         setAssignments(allAssignments);
       }
     } catch (error) {
@@ -427,7 +435,7 @@ export default function CalendarPage() {
 
                 </div>
               )}
-            </div>
+            </div>w
 
           </div>
         </div>
