@@ -3,13 +3,18 @@ import { cookies } from 'next/headers';
 
 const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
 
+// --- Inside lib/auth.ts ---
+
 export interface AuthPayload extends JWTPayload {
-  userId: number; // 👈 Officially a number!
+  userId: string | number;
+  email: string; // 👈 Add this line to the rules!
 }
 
-export async function signToken(payload: { userId: number }) {
+export async function signToken(payload: { userId: string | number; email: string }) {
+  // 👈 Added email to the function signature above
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
     .setExpirationTime('1d')
     .sign(SECRET_KEY);
 }

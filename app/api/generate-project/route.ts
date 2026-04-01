@@ -17,7 +17,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const userId = session.userId;
+    // Convert to Number to match Prisma Schema
+    const userId = Number(session.userId);
 
     const formData = await req.formData();
     const file = formData.get('file') as File;
@@ -33,7 +34,6 @@ export async function POST(req: Request) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
     
-    // 💡 UPDATED PROMPT: Telling Gemini to stop guessing dates
     const prompt = `
       You are an expert project manager for university students. Analyze this project brief text:
       "${pdfText.slice(0, 15000)}"
@@ -97,7 +97,8 @@ export async function GET() {
     const session = await getSession();
     if (!session || !session.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
-    const userId = session.userId;
+    // Fixed: Line 103 error resolved by wrapping in Number()
+    const userId = Number(session.userId);
 
     const projects = await prisma.project.findMany({
       where: { userId: userId }, 
@@ -111,7 +112,6 @@ export async function GET() {
   }
 }
 
-// 💡 NEW ROUTE: Updates a specific step when the user adds a date manually
 export async function PATCH(req: Request) {
   try {
     const session = await getSession();
